@@ -11,7 +11,7 @@ class SimpleClassifier(nn.Module):
         super(SimpleClassifier, self).__init__()
         # encoder: No encoder inside this class.
         # classifier: Do not follow the BERT built-in classifier anymore.
-        self.input_dim = 4*2*config['enc_lstm_dim']
+        self.input_dim = 4*config['enc_dim']
         self.drop = nn.Dropout(config['dropout_prob'])
         self.num_labels = config['n_classes']
         self.classifier = nn.Sequential(

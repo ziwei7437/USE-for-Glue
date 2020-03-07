@@ -17,3 +17,9 @@ No Fine-tuning tasks implemented on the Encoder. We only test the following task
 * QNLI
 
 * RTE
+
+
+Requirements:
+    Pytorch Version: 1.4
+    Tensorflow-gpu: 2.1
+    
