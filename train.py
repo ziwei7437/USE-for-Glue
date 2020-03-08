@@ -14,7 +14,7 @@ from torch import optim
 import torch.nn as nn
 
 from tasks import get_task, MnliMismatchedProcessor
-from models import InferSent, SimpleClassifier
+from modeling import SimpleClassifier
 
 import initialization
 from runner import RunnerParameters, GlueTaskClassifierRunner
@@ -113,7 +113,8 @@ def main():
     initialization.init_output_dir(args)
     initialization.save_args(args)
     task = get_task(args.task_name, args.data_dir)
-    use_cuda = False if args.no_cuda else True    parser.add_argument("--fc_dim", type=int, default=512, help="nhid of fc layers")
+    use_cuda = False if args.no_cuda else True
+    verbose = args.verbose
 
     config = {
         'dropout_prob'  :   args.dropout_prob,
