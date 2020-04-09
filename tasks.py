@@ -431,6 +431,7 @@ PROCESSORS = {
     "qnli": QnliProcessor,
     "rte": RteProcessor,
     "snli": SnliProcessor,
+    "wnli": WnliProcessor,
 }
 
 DEFAULT_FOLDER_NAMES = {
@@ -440,6 +441,7 @@ DEFAULT_FOLDER_NAMES = {
     "qnli": "QNLI",
     "rte": "RTE",
     "snli": "SNLI",
+    "wnli": "WNLI",
 }
 
 class Task:
