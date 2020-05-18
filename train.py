@@ -8,7 +8,6 @@ import numpy as np
 
 import logging
 
-
 import torch
 from torch import optim
 import torch.nn as nn
@@ -37,8 +36,8 @@ def get_args(*in_args):
                         default=None,
                         required=True,
                         help='the name of the task to train.')
-    parser.add_argument("--output_dir", 
-                        type=str, 
+    parser.add_argument("--output_dir",
+                        type=str,
                         default=None,
                         required=True,
                         help="Output directory")
@@ -90,7 +89,7 @@ def get_args(*in_args):
 
     # others
     parser.add_argument("--verbose", action="store_true", help='showing information.')
-    
+
     args = parser.parse_args(*in_args)
     return args
 
@@ -117,10 +116,10 @@ def main():
     verbose = args.verbose
 
     config = {
-        'dropout_prob'  :   args.dropout_prob,
-        'n_classes'     :   args.n_classes,
-        'fc_dim'        :   args.fc_dim,
-        'enc_dim'       :   512,
+        'dropout_prob': args.dropout_prob,
+        'n_classes': args.n_classes,
+        'fc_dim': args.fc_dim,
+        'enc_dim': 512,
     }
 
     # load model
@@ -134,7 +133,6 @@ def main():
     train_examples = task.get_train_examples()
     # calculate t_total
     t_total = initialization.get_opt_train_steps(len(train_examples), args)
-
 
     # build optimizer.
     optimizer = optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9)
@@ -152,15 +150,15 @@ def main():
         eval_batch_size=args.eval_batch_size,
         verbose=verbose
     )
-    
+
     # create runner class for training and evaluation tasks.
     runner = GlueTaskClassifierRunner(
-        encoder_model = USE,
-        classifier_model = classifier,
-        optimizer = optimizer,
-        label_list = task.get_labels(),
-        device = device,
-        rparams = r_params
+        encoder_model=USE,
+        classifier_model=classifier,
+        optimizer=optimizer,
+        label_list=task.get_labels(),
+        device=device,
+        rparams=r_params
     )
 
     if args.do_train:
@@ -188,7 +186,7 @@ def main():
             for k, v in results["metrics"].items():
                 combined_metrics[k] = v
             for k, v in mm_results["metrics"].items():
-                combined_metrics["mm-"+k] = v
+                combined_metrics["mm-" + k] = v
             combined_metrics_str = json.dumps({
                 "loss": results["loss"],
                 "metrics": combined_metrics,
@@ -196,6 +194,7 @@ def main():
             print(combined_metrics_str)
             with open(os.path.join(args.output_dir, "val_metrics.json"), "w") as f:
                 f.write(combined_metrics_str)
+
 
 if __name__ == '__main__':
     main()

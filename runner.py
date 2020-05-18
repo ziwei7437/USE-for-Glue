@@ -14,8 +14,10 @@ from evaluate import compute_metrics
 
 logger = logging.getLogger(__name__)
 
+
 def is_null_label_map(label_map):
     return len(label_map) == 1 and label_map[None] == 0
+
 
 def get_label_mode(label_map):
     if is_null_label_map(label_map):
@@ -23,10 +25,12 @@ def get_label_mode(label_map):
     else:
         return LabelModes.CLASSIFICATION
 
+
 def warmup_linear(x, warmup=0.002):
     if x < warmup:
-        return x/warmup
+        return x / warmup
     return 1.0 - x
+
 
 def convert_example_to_feature(example, label_map):
     '''convert example to feature. only change the label into feature if label map exists'''
@@ -42,6 +46,7 @@ def convert_example_to_feature(example, label_map):
         label_id=label_id
     )
 
+
 def convert_examples_to_features(examples, label_map, verbose=True):
     """Load a dataset into a list of `InputFeatures`."""
     features = []
@@ -56,9 +61,11 @@ def convert_examples_to_features(examples, label_map, verbose=True):
         features.append(feature_instance)
     return features
 
+
 def get_full_batch(features, label_mode):
     full_batch = features_to_data(features, label_mode=label_mode)
     return full_batch
+
 
 def features_to_data(features, label_mode):
     if label_mode == LabelModes.CLASSIFICATION:
@@ -108,9 +115,9 @@ class TrainEpochState:
 
 
 class RunnerParameters:
-    def __init__(self, local_rank, n_gpu,learning_rate, gradient_accumulation_steps, 
-                t_total, warmup_proportion, verbose,
-                num_train_epochs, train_batch_size, eval_batch_size):
+    def __init__(self, local_rank, n_gpu, learning_rate, gradient_accumulation_steps,
+                 t_total, warmup_proportion, verbose,
+                 num_train_epochs, train_batch_size, eval_batch_size):
         self.local_rank = local_rank
         self.n_gpu = n_gpu
         self.learning_rate = learning_rate
@@ -133,7 +140,7 @@ class GlueTaskClassifierRunner:
         self.label_map = {v: i for i, v in enumerate(label_list)}
         self.device = device
         self.rparams = rparams
-    
+
     def run_train_classifier(self, train_examples, verbose=True):
         if verbose:
             logger.info("***** Running Training for Classifier *****")
@@ -148,10 +155,10 @@ class GlueTaskClassifierRunner:
     def run_train_epoch(self, train_dataloader):
         for _ in self.run_train_epoch_context(train_dataloader):
             pass
-    
+
     def run_train_epoch_context(self, train_dataloader):
         self.classifier_model.train()
-        #self.encoder_model.eval()
+        # self.encoder_model.eval()
         train_epoch_state = TrainEpochState()
         for step, batch in enumerate(tqdm(train_dataloader, desc="Training")):
             self.run_train_step(
@@ -162,19 +169,19 @@ class GlueTaskClassifierRunner:
             yield step, batch, train_epoch_state
 
     def run_train_step(self, step, batch, train_epoch_state):
-        #self.encoder_model.eval()
+        # self.encoder_model.eval()
         s1 = batch[0]
         s2 = batch[1]
 
         # sent1 sent2 embeddings...
         s1_emb = self.encoder_model(s1).numpy()
         s2_emb = self.encoder_model(s2).numpy()
-        
+
         s1_emb = torch.tensor(s1_emb).to(self.device)
         s2_emb = torch.tensor(s2_emb).to(self.device)
         labels = batch[-1].to(self.device)
 
-        loss = self.classifier_model(s1_emb, s2_emb, labels = labels)
+        loss = self.classifier_model(s1_emb, s2_emb, labels=labels)
         if self.rparams.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu.
         if self.rparams.gradient_accumulation_steps > 1:
@@ -195,18 +202,17 @@ class GlueTaskClassifierRunner:
             self.optimizer.zero_grad()
             train_epoch_state.global_step += 1
 
-
     def run_val(self, val_examples, task_name, verbose=True):
         val_dataloader = self.get_eval_dataloader(val_examples, verbose=verbose)
         self.classifier_model.eval()
-        #self.encoder_model.eval()
+        # self.encoder_model.eval()
 
         total_eval_loss = 0
         nb_eval_steps, nb_eval_examples = 0, 0
         all_logits = []
         all_labels = []
         for step, batch in enumerate(tqdm(val_dataloader, desc="Evaluating (Val)")):
-            #batch = batch.to(self.device)
+            # batch = batch.to(self.device)
             s1 = batch[0]
             s2 = batch[1]
 
@@ -218,7 +224,7 @@ class GlueTaskClassifierRunner:
                 s2_emb = torch.tensor(s2_emb).to(self.device)
                 labels = batch[-1].to(self.device)
 
-                tmp_eval_loss = self.classifier_model(s1_emb, s2_emb, labels = labels)
+                tmp_eval_loss = self.classifier_model(s1_emb, s2_emb, labels=labels)
                 logits = self.classifier_model(s1_emb, s2_emb)
                 label_ids = batch[-1].cpu().numpy()
 
@@ -246,7 +252,7 @@ class GlueTaskClassifierRunner:
         full_batch = get_full_batch(
             train_features, label_mode=get_label_mode(self.label_map),
         )
-        
+
         if self.rparams.local_rank == -1:
             train_sampler = RandomSampler(full_batch.pairs)
         else:
@@ -268,7 +274,7 @@ class GlueTaskClassifierRunner:
             full_batch.pairs, sampler=eval_sampler, batch_size=self.rparams.eval_batch_size,
         )
         return eval_dataloader
-    
+
 
 def compute_task_metrics(task_name, logits, labels):
     if logits.shape[1] == 1:
